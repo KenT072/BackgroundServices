@@ -151,6 +151,10 @@ class TrackerService : Service(), SensorEventListener {
     private fun showJumpNotification(){
         val mainActivityIntent = Intent(this, MainActivity::class.java).apply{
             action = MainActivity.ACTION_SERVICE_STOPPED_JUMP
+            putExtra(
+                MainActivity.EXTRA_JUMP_COUNT,
+                jumpCount
+            )
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
 

@@ -7,8 +7,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import android.Manifest
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.provider.CalendarContract
 import android.widget.Button
 import android.widget.TextView
 import androidx.core.app.ActivityCompat
@@ -53,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         const val ACTION_SERVICE_STOPPED_JUMP = "nit2x.paba.backgroundservice.ACTION_SERVICE_STOPPED_JUMP"
         const val REQUEST_CODE_PERMISSIONS = 101
         const val REQUEST_CODE_WORKOUT_PERMISSIONS = 102
+        const val EXTRA_JUMP_COUNT = "extra_jump_count"
     }
 
     override fun onRequestPermissionsResult(
@@ -97,8 +100,53 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleIntent(intent: Intent?){
-        if (intent?.action == ACTION_SERVICE_STOPPED_JUMP){
-            txtstatus.text = "Background services sudah berhenti karena Anda melompat"
+        val incomingIntent = intent ?: return
+        if (incomingIntent.action == ACTION_SERVICE_STOPPED_JUMP) {
+            val count = incomingIntent.getIntExtra(EXTRA_JUMP_COUNT, 0)
+            txtstatus.text = "Background service sudah berhenti."
+            statustextview.text = "Latihan selesai!\nJumlah lompatan: $count"
+
+            incomingIntent.action = null
+            setIntent(incomingIntent)
+
+            openWorkoutCalendarEvent(count)
+        }
+    }
+
+    private fun openWorkoutCalendarEvent(count: Int) {
+        val startTime = System.currentTimeMillis()
+        val endTime = startTime + 30 * 60 * 1000L
+
+        val calendarIntent = Intent(Intent.ACTION_INSERT).apply {
+            data = CalendarContract.Events.CONTENT_URI
+
+            putExtra(
+                CalendarContract.Events.TITLE,
+                "Latihan Hari Ini"
+            )
+
+            putExtra(
+                CalendarContract.Events.DESCRIPTION,
+                "Latihan selesai dengan $count lompatan terdeteksi."
+            )
+
+            putExtra(
+                CalendarContract.EXTRA_EVENT_BEGIN_TIME,
+                startTime
+            )
+
+            putExtra(
+                CalendarContract.EXTRA_EVENT_END_TIME,
+                endTime
+            )
+        }
+
+        try {
+            startActivity(calendarIntent)
+        } catch (e: ActivityNotFoundException) {
+            statustextview.text =
+                "Latihan selesai! Jumlah lompatan: $count\n" +
+                        "Aplikasi Kalender tidak ditemukan."
         }
     }
 
