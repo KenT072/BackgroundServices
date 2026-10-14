@@ -77,7 +77,7 @@ class TrackerService : Service(), SensorEventListener {
     }
 
     override fun onBind(p0: Intent?): IBinder? {
-        TODO("Not yet implemented")
+        return null
     }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
