@@ -33,6 +33,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var txtstatus : TextView
     private lateinit var btnStart: Button
+
+    private lateinit var statustextview : TextView
+    private lateinit var btnStartLatihan : Button
     
     private fun hasAllPermissions(): Boolean{
         return  permissionsToRequest.all { 
@@ -44,10 +47,12 @@ class MainActivity : AppCompatActivity() {
         val serviceIntent = Intent(this, TrackerService::class.java)
         ContextCompat.startForegroundService(this,serviceIntent)
         txtstatus.text = "Background service sedang berjalan..."
+        statustextview.text = "Latihan sedang berjalan..."
     }
     companion object {
         const val ACTION_SERVICE_STOPPED_JUMP = "nit2x.paba.backgroundservice.ACTION_SERVICE_STOPPED_JUMP"
         const val REQUEST_CODE_PERMISSIONS = 101
+        const val REQUEST_CODE_WORKOUT_PERMISSIONS = 102
     }
 
     override fun onRequestPermissionsResult(
@@ -64,7 +69,7 @@ class MainActivity : AppCompatActivity() {
                     break
                 }
             }
-            
+
             if (allPermissionsGranted) {
                 val serviceIntent = Intent(this, TrackerService::class.java)
                 startForegroundService(serviceIntent)
@@ -72,6 +77,21 @@ class MainActivity : AppCompatActivity() {
             }
             else{
                 txtstatus.text = "Izin ditolak, service tidak akan dijalankan."
+            }
+        }
+
+        else if (requestCode == REQUEST_CODE_WORKOUT_PERMISSIONS) {
+            val allWorkoutPermissionsGranted =
+                grantResults.isNotEmpty() &&
+                        grantResults.all {
+                            it == PackageManager.PERMISSION_GRANTED
+                        }
+
+            if (allWorkoutPermissionsGranted) {
+                startTrackerService()
+            } else {
+                statustextview.text =
+                    "Izin ditolak, latihan tidak dapat dimulai."
             }
         }
     }
@@ -103,6 +123,9 @@ class MainActivity : AppCompatActivity() {
         txtstatus = findViewById<TextView>(R.id.txtstatus)
         btnStart = findViewById<Button>(R.id.btnStart)
 
+        statustextview = findViewById<TextView>(R.id.statustextview)
+        btnStartLatihan = findViewById<Button>(R.id.btnStartLatihan)
+
         btnStart.setOnClickListener {
             if (hasAllPermissions()){
                 startTrackerService()
@@ -111,6 +134,18 @@ class MainActivity : AppCompatActivity() {
                     this,
                     permissionsToRequest,
                     REQUEST_CODE_PERMISSIONS
+                )
+            }
+        }
+
+        btnStartLatihan.setOnClickListener {
+            if (hasAllPermissions()){
+                startTrackerService()
+            } else {
+                ActivityCompat.requestPermissions(
+                    this,
+                    permissionsToRequest,
+                    REQUEST_CODE_WORKOUT_PERMISSIONS
                 )
             }
         }

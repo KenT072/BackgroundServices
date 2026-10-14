@@ -22,4 +22,19 @@
         android:id="@+id/btnStart"
         android:text="Mulai Lacak Aktivitas" />
 
+    <TextView
+        android:id="@+id/statustextview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="16dp"
+        android:text="Tekan tombol untuk memulai latihan."
+        android:textSize="18sp" />
+
+    <Button
+        android:id="@+id/btnStartLatihan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Mulai Latihan" />
+
 </LinearLayout>
