@@ -100,6 +100,9 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+        txtstatus = findViewById<TextView>(R.id.txtstatus)
+        btnStart = findViewById<Button>(R.id.btnStart)
+
         btnStart.setOnClickListener {
             if (hasAllPermissions()){
                 startTrackerService()
