@@ -23,6 +23,11 @@ class TrackerService : Service(), SensorEventListener {
 
     private lateinit var sensorManager: SensorManager
     private var accelerometer: Sensor? = null
+
+    private var jumpCount = 0
+    private var wasAboveThreshold = false
+    private var lastDetectionTime = 0L
+
     private val NOTIFICATION_CHANNEL_ID_SERVICE_RUNNING = "tracker_service_running"
     private val NOTIFICATION_CHANNEL_ID_JUMP_DETECTED = "tracker_jump_detected"
     private val NOTIFICATION_ID_SERVICE_RUNNING = 1
@@ -83,21 +88,40 @@ class TrackerService : Service(), SensorEventListener {
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
     }
 
-    override fun onSensorChanged(event: SensorEvent?){
-        if (event?.sensor?.type == Sensor.TYPE_ACCELEROMETER){
-            val y = event.values[1]
-            val jumpThreshold = 15.0
 
-            if (abs(y) > jumpThreshold){
-                Log.d("TrackerService", "LOMPATAN Terdeteksi! y:$y")
+    override fun onSensorChanged(event: SensorEvent?) {
+        if (event?.sensor?.type != Sensor.TYPE_ACCELEROMETER) {
+            return
+        }
 
+        val y = abs(event.values[1])
+        val jumpThreshold = 12f
+        val currentTime = System.currentTimeMillis()
+
+        if (
+            y > jumpThreshold &&
+            !wasAboveThreshold &&
+            currentTime - lastDetectionTime >= 350L
+        ) {
+            jumpCount++
+            wasAboveThreshold = true
+            lastDetectionTime = currentTime
+
+            Log.d(
+                "TrackerService",
+                "LANGKAH KE-$jumpCount TERDETEKSI! y: $y"
+            )
+
+            if (jumpCount > 2) {
                 sensorManager.unregisterListener(this)
-
                 showJumpNotification()
                 stopSelf()
             }
+        } else if (y < jumpThreshold * 0.85f) {
+            wasAboveThreshold = false
         }
     }
+
 
     override fun onCreate() {
         super.onCreate()
@@ -110,12 +134,17 @@ class TrackerService : Service(), SensorEventListener {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("TrackerService","Service onCreate")
 
+        jumpCount = 0
+        wasAboveThreshold = false
+        lastDetectionTime = 0L
+
         startForeground(
             NOTIFICATION_ID_SERVICE_RUNNING,
             buildServiceRunningNotification()
         )
-
+        sensorManager.unregisterListener(this)
         startJumpDetection()
+
         return START_STICKY
     }
 
