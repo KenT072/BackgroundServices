@@ -15,6 +15,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import kotlin.math.abs
 
 
@@ -122,4 +123,35 @@ class TrackerService : Service(), SensorEventListener {
             }
         }
     }
+
+    private fun showJumpNotification(){
+        val mainActivityIntent = Intent(this, MainActivity::class.java).apply{
+            action = MainActivity.ACTION_SERVICE_STOPPED_JUMP
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+
+        val pendingMainActivityIntent = PendingIntent.getActivity(
+            this,1,mainActivityIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val jumpNotification = NotificationCompat.Builder(this,NOTIFICATION_CHANNEL_ID_JUMP_DETECTED)
+            .setContentTitle("Lompatan Terdeteksi")
+            .setContentText("Service Berhenti. Ketuk untuk membuka aplikasi")
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setContentIntent(pendingMainActivityIntent)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .build()
+
+        try {
+            NotificationManagerCompat.from(this).notify(NOTIFICATION_CHANNEL_ID_JUMP_DETECTED, jumpNotification)
+        } catch (e: SecurityException){
+            Log.e(
+                "TrackerService",
+                "Gagal memunculkan notifikasi karena permission POST_NOTIFICATIONS tidak aktif: ${e.message}"
+            )
+        }
+    }
+
 }
