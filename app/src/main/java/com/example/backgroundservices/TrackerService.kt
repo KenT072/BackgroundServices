@@ -83,8 +83,20 @@ class TrackerService : Service(), SensorEventListener {
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
     }
 
-    override fun onSensorChanged(p0: SensorEvent?) {
-        TODO("Not yet implemented")
+    override fun onSensorChanged(event: SensorEvent?){
+        if (event?.sensor?.type == Sensor.TYPE_ACCELEROMETER){
+            val y = event.values[1]
+            val jumpThreshold = 15.0
+
+            if (abs(y) > jumpThreshold){
+                Log.d("TrackerService", "LOMPATAN Terdeteksi! y:$y")
+
+                sensorManager.unregisterListener(this)
+
+                showJumpNotification()
+                stopSelf()
+            }
+        }
     }
 
     override fun onCreate() {
@@ -105,22 +117,6 @@ class TrackerService : Service(), SensorEventListener {
 
         startJumpDetection()
         return START_STICKY
-    }
-
-    override fun onSensorChanged(event: SensorEvent?){
-        if (event?.sensor?.type == Sensor.TYPE_ACCELEROMETER){
-            val y = event.values[1]
-            val jumpThreshold = 15.0
-
-            if (abs(y) > jumpThreshold){
-                Log.d("TrackerService", "LOMPATAN Terdeteksi! y:$y")
-
-                sensorManager.unregisterListener(this)
-
-                showJumpNotification()
-                stopSelf()
-            }
-        }
     }
 
     private fun showJumpNotification(){
@@ -144,7 +140,7 @@ class TrackerService : Service(), SensorEventListener {
             .build()
 
         try {
-            NotificationManagerCompat.from(this).notify(NOTIFICATION_CHANNEL_ID_JUMP_DETECTED, jumpNotification)
+            NotificationManagerCompat.from(this).notify(NOTIFICATION_ID_JUMP_DETECTED, jumpNotification)
         } catch (e: SecurityException){
             Log.e(
                 "TrackerService",
